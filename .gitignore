@@ -1,3 +1,9 @@
 .*
 
 *.iml
+
+/out/
+
+/src/Test.java
+
+elf-Linux-x86-bash
