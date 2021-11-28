@@ -1,4 +1,7 @@
-package ELF;
+package disasm.ELF;
+
+import static disasm.util.ByteFileReader.getNumBigEndian;
+import static disasm.util.ByteFileReader.getNumLittleEndian;
 
 public class ELFHeader {
     private final static int MAGIC_CONST = 0x7f454c46;
@@ -27,17 +30,8 @@ public class ELFHeader {
     private final short e_shnum;
     private final short e_shstrndx;
 
-    private static int getNumLittleEndian(byte[] bytes, int offset, int numBytes) {
-        int num = 0;
-        for (int i = offset; i < offset + numBytes; i++) {
-            num <<= 8;
-            num |= bytes[i];
-        }
-        return num;
-    }
-
     public ELFHeader(byte[] header) {
-        ei_mag = getNumLittleEndian(header, 0, 4);
+        ei_mag = getNumBigEndian(header, 0, 4);
         if (ei_mag != MAGIC_CONST) {
             throw new AssertionError("Not an elf header");
         }
@@ -56,9 +50,10 @@ public class ELFHeader {
         System.arraycopy(header, 9, ei_pad, 0, 7);
         e_type = (short) getNumLittleEndian(header, 0x10, 2);
         e_machine = (short) getNumLittleEndian(header, 0x12, 2);
-        if (e_machine != MACHINE_RISC_V) {
-            throw new AssertionError("Not a RISC-V ELF");
-        }
+        // I have no RISC-V ELFs so for testing I commented out these lines
+//        if (e_machine != MACHINE_RISC_V) {
+//            throw new AssertionError("Not a RISC-V ELF");
+//        }
         e_version = getNumLittleEndian(header, 0x14, 4);
         e_entry = getNumLittleEndian(header, 0x18, 4);
         e_phoff = getNumLittleEndian(header, 0x1c, 4);
@@ -70,5 +65,13 @@ public class ELFHeader {
         e_shentsize = (short) getNumLittleEndian(header, 0x2e, 2);
         e_shnum = (short) getNumLittleEndian(header, 0x30, 2);
         e_shstrndx = (short) getNumLittleEndian(header, 0x32, 2);
+    }
+
+    public int getShoff() {
+        return e_shoff;
+    }
+
+    public short getShnum() {
+        return e_shnum;
     }
 }
