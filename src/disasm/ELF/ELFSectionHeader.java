@@ -3,6 +3,7 @@ package disasm.ELF;
 import static disasm.util.ByteFileReader.getNumLittleEndian;
 
 public class ELFSectionHeader {
+    private final static int ENTRY_SIZE = 0x28;
     private final int sh_name;
     private final int sh_type;
     private final int sh_flags;
@@ -25,5 +26,17 @@ public class ELFSectionHeader {
         sh_info = getNumLittleEndian(header, shoff + 0x1c, 4);
         sh_addralign = getNumLittleEndian(header, shoff + 0x20, 4);
         sh_entsize = getNumLittleEndian(header, shoff + 0x24, 4);
+    }
+
+    public int getOffset() {
+        return sh_offset;
+    }
+
+    public int getNameOffset() {
+        return sh_name;
+    }
+
+    public int getSize() {
+        return sh_size;
     }
 }

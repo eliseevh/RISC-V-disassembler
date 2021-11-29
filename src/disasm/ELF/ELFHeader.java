@@ -4,7 +4,7 @@ import static disasm.util.ByteFileReader.getNumBigEndian;
 import static disasm.util.ByteFileReader.getNumLittleEndian;
 
 public class ELFHeader {
-    private final static int MAGIC_CONST = 0x7f454c46;
+    private final static int MAGIC_CONST = 0x7f_45_4c_46;
     private final static byte CLASS_32_BIT = 1;
     private final static byte DATA_LITTLE_ENDIAN = 1;
     private final static short MACHINE_RISC_V = 0xf3;
@@ -63,15 +63,22 @@ public class ELFHeader {
         e_phentsize = (short) getNumLittleEndian(header, 0x2a, 2);
         e_phnum = (short) getNumLittleEndian(header, 0x2c, 2);
         e_shentsize = (short) getNumLittleEndian(header, 0x2e, 2);
+        if (e_shentsize != 0x28) {
+            throw new AssertionError("Wrong section header table entry size");
+        }
         e_shnum = (short) getNumLittleEndian(header, 0x30, 2);
         e_shstrndx = (short) getNumLittleEndian(header, 0x32, 2);
     }
 
-    public int getShoff() {
+    public int getSectionHeaderOffset() {
         return e_shoff;
     }
 
-    public short getShnum() {
+    public short getSectionHeaderEntriesNum() {
         return e_shnum;
+    }
+
+    public short getSectionStringTableIndex() {
+        return e_shstrndx;
     }
 }
