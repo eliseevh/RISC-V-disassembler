@@ -1,6 +1,6 @@
 package disasm.ELF;
 
-import static disasm.util.ByteFileReader.getNullTerminatedString;
+import static disasm.util.BytesOperations.*;
 
 public class ELFFile {
     private final ELFHeader header;

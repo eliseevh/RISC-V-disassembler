@@ -3,6 +3,7 @@ package disasm.ELF;
 public class SymtabSection extends ELFSection {
     private final static int ENTRY_SIZE = 0x10;
     private final SymtabEntry[] entries;
+    private final static String TABLE_HEADER = "Symbol Value              Size Type     Bind     Vis       Index Name\n";
 
     public SymtabSection(ELFFile file) {
         super(file, ".symtab");
@@ -16,5 +17,12 @@ public class SymtabSection extends ELFSection {
         }
     }
 
-
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder(TABLE_HEADER);
+        for (SymtabEntry entry : entries) {
+            builder.append(entry.toString());
+        }
+        return builder.toString();
+    }
 }

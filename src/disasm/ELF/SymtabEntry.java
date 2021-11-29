@@ -2,7 +2,7 @@ package disasm.ELF;
 
 import java.util.Map;
 
-import static disasm.util.ByteFileReader.getNumLittleEndian;
+import static disasm.util.BytesOperations.*;
 
 public class SymtabEntry {
     private final int nameOffset;
@@ -54,17 +54,23 @@ public class SymtabEntry {
             (byte) 6, "ELIMINATE"
     );
 
+//    private final static Map<Short, String> IDX_DECODE = Map.of(
+//            (short) 0x0000, "UNDEF",
+//            (short) 0xff00, "LORESERVE",
+//            (short) 0x
+//    )
+
     public SymtabEntry(byte[] bytes, int offset, ELFFile file, int entryIdx) {
         this.entryIdx = entryIdx;
-        nameOffset = getNumLittleEndian(bytes, offset, 4);
-        value = getNumLittleEndian(bytes, offset + 4, 4);
-        size = getNumLittleEndian(bytes, offset + 8, 4);
+        nameOffset = getIntLittleEndian(bytes, offset);
+        value = getIntLittleEndian(bytes, offset + 4);
+        size = getIntLittleEndian(bytes, offset + 8);
         info = bytes[offset + 0xc];
         type = (byte) (info & 0xf);
         bind = (byte) (info >>> 4);
         other = bytes[offset + 0xd];
         visibility = (byte) (other & 0x3);
-        idx = (short) getNumLittleEndian(bytes, offset + 0xe, 2);
+        idx = getShortLittleEndian(bytes, offset + 0xe);
         if (nameOffset == 0) {
             name = "";
         } else {
@@ -74,8 +80,6 @@ public class SymtabEntry {
 
     @Override
     public String toString() {
-//        StringBuilder builder = new StringBuilder();
-//        builder.append(
         return String.format("[%4d] 0x%-15X %5d %-8s %-8s %-8s %6s %s\n",
                 entryIdx,
                 value,
