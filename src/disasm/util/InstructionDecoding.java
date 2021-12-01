@@ -71,6 +71,9 @@ public final class InstructionDecoding {
         return "t" + (register - 25);
     }
 
+
+    // TODO: replace "throw new AssertionError(...) with getting unknown_command
+
     public String getRInstructionRepresentation(int instruction) {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
@@ -119,5 +122,102 @@ public final class InstructionDecoding {
         final String first = getRegisterName(rs1);
         final String second = getRegisterName(rs2);
         return inst + " " + dest + ", " + first + ", " + second;
+    }
+
+    public String getIInstructionRepresentation(int instruction) {
+        byte opcode = (byte) (instruction & OPCODE_MASK);
+        byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
+        byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
+        short imm12 = (short) ((instruction & (RS_2_MASK | FUNCT_7_MASK)) >>> RS_2_SHIFT);
+        String inst;
+        switch (opcode) {
+            case 0b0010011:
+                switch (funct3) {
+                    case 0x0:
+                        inst = "addi";
+                        break;
+                    case 0x1:
+                        if ((imm12 & 0b111111100000) == 0) {
+                            inst = "slli";
+                        } else {
+                            throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                        }
+                        break;
+                    case 0x2:
+                        inst = "slti";
+                        break;
+                    case 0x3:
+                        inst = "sltiu";
+                        break;
+                    case 0x4:
+                        inst = "xori";
+                        break;
+                    case 0x5:
+                        if ((imm12 & 0b111111100000) == 0) {
+                            inst = "srli";
+                        } else if ((imm12 & 0b111111100000) == (0x20 << 5)) {
+                            inst = "srai";
+                        } else {
+                            throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                        }
+                        break;
+                    case 0x6:
+                        inst = "ori";
+                        break;
+                    case 0x7:
+                        inst = "andi";
+                        break;
+                    default:
+                        throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                }
+                break;
+            case 0b0000011:
+                inst = switch (funct3) {
+                    case 0x0 -> "lb";
+                    case 0x1 -> "lh";
+                    case 0x2 -> "lw";
+                    case 0x4 -> "lbu";
+                    case 0x5 -> "lhu";
+                    default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                };
+                break;
+            case 0b1100111:
+                if (funct3 == 0x0) {
+                    inst = "jalr";
+                } else {
+                    throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                }
+                break;
+            case 0b1110011:
+                if (funct3 == 0x0) {
+                    if (imm12 == 0x0) {
+                        inst = "ecall";
+                    } else if (imm12 == 0x1) {
+                        inst = "ebreak";
+                    } else {
+                        throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                    }
+                } else {
+                    throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                }
+                break;
+            default:
+                throw new AssertionError("Unexpected opcode (" + opcode + ")");
+        }
+        return switch (inst) {
+            case "ecall", "ebreak" -> inst;
+            case "jalr" -> String.format("jalr %s, %d(%s)",
+                    getRegisterName(rd), imm12, getRegisterName(rs1));
+
+            case "lb", "lh", "lw", "lbu", "lhu" -> String.format("%s %s, %d(%s)",
+                    inst, getRegisterName(rd), imm12, getRegisterName(rs1));
+
+            case "slli", "srli", "srai" -> String.format("%s %s, %s, %d",
+                    inst, getRegisterName(rd), getRegisterName(rs1), imm12 & 0b11111);
+
+            default -> String.format("%s %s, %s, %d",
+                    inst, getRegisterName(rd), getRegisterName(rs1), imm12);
+        };
     }
 }
