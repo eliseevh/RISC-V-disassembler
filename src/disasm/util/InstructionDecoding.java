@@ -74,7 +74,7 @@ public final class InstructionDecoding {
 
     // TODO: replace "throw new AssertionError(...) with getting unknown_command
 
-    public String getRInstructionRepresentation(int instruction) {
+    public static String getRInstructionRepresentation(int instruction) {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
@@ -121,16 +121,16 @@ public final class InstructionDecoding {
         final String dest = getRegisterName(rd);
         final String first = getRegisterName(rs1);
         final String second = getRegisterName(rs2);
-        return inst + " " + dest + ", " + first + ", " + second;
+        return String.format("%s %s, %s, %s", inst, dest, first, second);
     }
 
-    public String getIInstructionRepresentation(int instruction) {
+    public static String getIInstructionRepresentation(int instruction) {
         byte opcode = (byte) (instruction & OPCODE_MASK);
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
         short imm12 = (short) ((instruction & (RS_2_MASK | FUNCT_7_MASK)) >>> RS_2_SHIFT);
-        String inst;
+        final String inst;
         switch (opcode) {
             case 0b0010011:
                 switch (funct3) {
@@ -219,5 +219,76 @@ public final class InstructionDecoding {
             default -> String.format("%s %s, %s, %d",
                     inst, getRegisterName(rd), getRegisterName(rs1), imm12);
         };
+    }
+
+    public static String getSInstructionRepresentation(int instruction) {
+        // imm5 is in the rd place
+        byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
+        byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
+        byte rs2 = (byte) ((instruction & RS_2_MASK) >>> RS_2_SHIFT);
+        // imm7 in in the funct7 place
+        byte imm7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
+        final String inst = switch (funct3) {
+            case 0x0 -> "sb";
+            case 0x1 -> "sh";
+            case 0x2 -> "sw";
+            default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+        };
+        final String source = getRegisterName(rs2);
+        final String base = getRegisterName(rs1);
+        final String offset = Integer.toString(imm5 + (imm7 << 5));
+        return String.format("%s %s, %s(%s)", inst, source, offset, base);
+    }
+
+    public static String getBInstructionRepresentation(int instruction) {
+        byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
+        byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
+        byte rs2 = (byte) ((instruction & RS_2_MASK) >>> RS_2_SHIFT);
+        byte imm7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
+        final String inst = switch (funct3) {
+            case 0x0 -> "beq";
+            case 0x1 -> "bne";
+            case 0x4 -> "blt";
+            case 0x5 -> "bge";
+            case 0x6 -> "bltu";
+            case 0x7 -> "bgeu";
+            default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+        };
+        final String source1 = getRegisterName(rs1);
+        final String source2 = getRegisterName(rs2);
+        int label =
+                  ((imm5 & 0b11110) >>> 1)
+                + ((imm7 & 0b0111111) << 4)
+                + ((imm5 & 0b00001) << 10)
+                + ((imm7 & 0b1000000) << 5);
+        return String.format("%s %s, %s, %d", inst, source1, source2, label);
+    }
+
+    public static String getJInstructionRepresentation(int instruction) {
+        byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
+        final String inst = "jal";
+        final String dest = getRegisterName(rd);
+        int offset =
+                  ((imm20 & 0b01111111111000000000) >>> 9)
+                + ((imm20 & 0b00000000000100000000) << 2)
+                + ((imm20 & 0b00000000000011111111) << 11)
+                + ((imm20 & 0b10000000000000000000));
+        return String.format("%s %s, %d", inst, dest, offset);
+    }
+
+    public static String getUInstructionRepresentation(int instruction) {
+        byte opcode = (byte) (instruction & OPCODE_MASK);
+        byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
+        final String inst = switch (opcode) {
+            case 0b01100111 -> "lui";
+            case 0b00100111 -> "auipc";
+            default -> throw new AssertionError("Unexpected opcode (" + opcode + ")");
+        };
+        final String dest = getRegisterName(rd);
+        return String.format("%s %s, %d", inst, dest, imm20);
     }
 }
