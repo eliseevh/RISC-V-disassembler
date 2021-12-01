@@ -49,10 +49,9 @@ public class ELFHeader {
         System.arraycopy(header, 9, ei_pad, 0, 7);
         e_type = getShortLittleEndian(header, 0x10);
         e_machine = getShortLittleEndian(header, 0x12);
-        // I have no RISC-V ELFs so for testing I commented out these lines
-//        if (e_machine != MACHINE_RISC_V) {
-//            throw new AssertionError("Not a RISC-V ELF");
-//        }
+        if (e_machine != MACHINE_RISC_V) {
+            throw new AssertionError("Not a RISC-V ELF");
+        }
         e_version = getIntLittleEndian(header, 0x14);
         e_entry = getIntLittleEndian(header, 0x18);
         e_phoff = getIntLittleEndian(header, 0x1c);
