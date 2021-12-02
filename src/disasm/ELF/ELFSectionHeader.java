@@ -39,4 +39,8 @@ public class ELFSectionHeader {
     public int getSize() {
         return sh_size;
     }
+
+    public int getAddress() {
+        return sh_addr;
+    }
 }

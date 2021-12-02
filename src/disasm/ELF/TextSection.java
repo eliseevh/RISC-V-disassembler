@@ -1,9 +1,11 @@
 package disasm.ELF;
 
 public class TextSection extends ELFSection {
+    private final int address;
 
     public TextSection(ELFFile file) {
         super(file, ".text");
+        address = header.getAddress();
     }
 
     public byte getByte(int idx) {
@@ -18,5 +20,9 @@ public class TextSection extends ELFSection {
 
     public int getSize() {
         return bytes.length;
+    }
+
+    public int getAddress() {
+        return address;
     }
 }
