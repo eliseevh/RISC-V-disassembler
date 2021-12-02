@@ -17,6 +17,10 @@ public class SymtabSection extends ELFSection {
         }
     }
 
+    public SymtabEntry[] getEntries() {
+        return entries;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(TABLE_HEADER);

@@ -72,7 +72,8 @@ public final class InstructionDecoding {
     }
 
 
-    // TODO: replace "throw new AssertionError(...) with getting unknown_command
+    // TODO: replace "throw new AssertionError(...)" with getting unknown_command
+    // TODO: correct work with imm sign extension
 
     public static String getRInstructionRepresentation(int instruction) {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);

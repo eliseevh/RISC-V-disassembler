@@ -41,12 +41,15 @@ public class ELFFile {
         throw new AssertionError("There is no section with name \"" + name + "\"");
     }
 
+    public ELFHeader getHeader() {
+        return header;
+    }
+
     public byte[] getFile() {
         return file;
     }
 
     public String getString(int offset) {
-//        System.err.println(offset + " " + stringTableHeader.getOffset());
         return getNullTerminatedString(file, offset + stringTableHeader.getOffset());
     }
 }

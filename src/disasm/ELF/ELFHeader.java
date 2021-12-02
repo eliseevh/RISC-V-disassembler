@@ -79,4 +79,8 @@ public class ELFHeader {
     public short getSectionStringTableIndex() {
         return e_shstrndx;
     }
+
+    public int getEntryPoint() {
+        return e_entry;
+    }
 }

@@ -54,11 +54,20 @@ public class SymtabEntry {
             (byte) 6, "ELIMINATE"
     );
 
-//    private final static Map<Short, String> IDX_DECODE = Map.of(
-//            (short) 0x0000, "UNDEF",
-//            (short) 0xff00, "LORESERVE",
-//            (short) 0x
-//    )
+
+    //TODO: idx decoding
+
+    public String getType() {
+        return TYPE_DECODE.get(type);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getValue() {
+        return value;
+    }
 
     public SymtabEntry(byte[] bytes, int offset, ELFFile file, int entryIdx) {
         this.entryIdx = entryIdx;

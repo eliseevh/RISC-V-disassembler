@@ -15,4 +15,8 @@ public class TextSection extends ELFSection {
         System.arraycopy(bytes, offset, result, 0, size);
         return result;
     }
+
+    public int getSize() {
+        return bytes.length;
+    }
 }
