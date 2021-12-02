@@ -283,10 +283,10 @@ public final class InstructionDecoding {
     public static String getUInstructionRepresentation(int instruction) {
         byte opcode = (byte) (instruction & OPCODE_MASK);
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
-        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
+        int imm20 = (instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK)) >>> FUNCT_3_SHIFT;
         final String inst = switch (opcode) {
-            case 0b01100111 -> "lui";
-            case 0b00100111 -> "auipc";
+            case 0b0110111 -> "lui";
+            case 0b0010111 -> "auipc";
             default -> throw new AssertionError("Unexpected opcode (" + opcode + ")");
         };
         final String dest = getRegisterName(rd);
