@@ -6,14 +6,16 @@ import disasm.ELF.TextSection;
 import java.util.List;
 import java.util.Map;
 
-public class AssemblerWriter {
+public class DisassemblerToString {
     private final List<Instruction> instructions;
     private final Map<Integer, String> labels;
+    private final SymtabSection symtab;
     private final int maxLabelLen;
 
-    public AssemblerWriter(SymtabSection symtab, TextSection text) {
+    public DisassemblerToString(SymtabSection symtab, TextSection text) {
         instructions = new InstructionsParser(text).getInstructions();
         labels = new LabelsParser(symtab).getLabels();
+        this.symtab = symtab;
         int maxv = 0;
         for (Map.Entry<Integer, String> label : labels.entrySet()) {
             maxv = Math.max(maxv, label.getValue().length());
@@ -21,9 +23,22 @@ public class AssemblerWriter {
         maxLabelLen = maxv;
     }
 
-
-    public String write() {
+    public String disasm() {
         StringBuilder builder = new StringBuilder();
+        builder.append(textSectionDisasm());
+        builder.append("\n");
+        builder.append(symtabSectionDisasm());
+        return builder.toString();
+    }
+
+    private String symtabSectionDisasm() {
+        StringBuilder builder = new StringBuilder(".symtab\n");
+        builder.append(symtab);
+        return builder.toString();
+    }
+
+    private String textSectionDisasm() {
+        StringBuilder builder = new StringBuilder(".text\n");
         for (int i = 0; i < instructions.size(); i++) {
             builder.append(getInstruction(i));
         }
@@ -36,6 +51,6 @@ public class AssemblerWriter {
         if (labels.containsKey(addr)) {
             label = labels.get(addr) + ":";
         }
-        return String.format("%08x %" + maxLabelLen + "s %s\n", addr, label, inst);
+        return String.format("%08x %" + (maxLabelLen + 1) + "s %s\n", addr, label, inst);
     }
 }

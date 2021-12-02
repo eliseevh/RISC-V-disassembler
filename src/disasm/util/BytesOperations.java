@@ -19,6 +19,7 @@ public final class BytesOperations {
                 bytes = Arrays.copyOf(bytes, 2 * size);
             }
         }
+        input.close();
         return Arrays.copyOf(bytes, size);
     }
 
