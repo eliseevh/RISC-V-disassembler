@@ -27,21 +27,24 @@ public class SymtabEntry {
             Map.entry((byte) 4, "FILE"),
             Map.entry((byte) 5, "COMMON"),
             Map.entry((byte) 6, "TLS"),
-            Map.entry((byte) 10, "LOOS"),
-            Map.entry((byte) 12, "HIOS"),
-            Map.entry((byte) 13, "STT_LOPROC"),
-            Map.entry((byte) 14, "SPARC_REGISTER"),
-            Map.entry((byte) 15, "HIPROC")
+            Map.entry((byte) 10, "OS"),
+            Map.entry((byte) 11, "OS"),
+            Map.entry((byte) 12, "OS"),
+            Map.entry((byte) 13, "PROC"),
+            Map.entry((byte) 14, "PROC"),
+            Map.entry((byte) 15, "PROC")
     );
 
     private final static Map<Byte, String> BIND_DECODE = Map.of(
             (byte) 0, "LOCAL",
             (byte) 1, "GLOBAL",
             (byte) 3, "WEAK",
-            (byte) 10, "LOOS",
-            (byte) 12, "HIOS",
-            (byte) 13, "LOPROC",
-            (byte) 15, "HIPROC"
+            (byte) 10, "OS",
+            (byte) 11, "OS",
+            (byte) 12, "OS",
+            (byte) 13, "PROC",
+            (byte) 14, "PROC",
+            (byte) 15, "PROC"
     );
 
     private final static Map<Byte, String> VISIBILITY_DECODE = Map.of(
@@ -55,7 +58,37 @@ public class SymtabEntry {
     );
 
 
-    //TODO: idx decoding
+    public static String decodeIdx(short index) {
+        int idx = Short.toUnsignedInt(index);
+        if (idx == 0) {
+            return "UNDEF";
+        }
+        if (idx == 0xff00) {
+            return "BEFORE";
+        }
+        if (idx == 0xff01) {
+            return "AFTER";
+        }
+        if (idx == 0xfff1) {
+            return "ABS";
+        }
+        if (idx == 0xfff2) {
+            return "IDX";
+        }
+        if (idx == 0xffff) {
+            return "XINDEX";
+        }
+        if (0xff00 <= idx && idx <= 0xff1f) {
+            return "PROC";
+        }
+        if (0xff20 <= idx && idx <= 0xff3f) {
+            return "OS";
+        }
+        if (0xff00 <= idx && idx <= 0xffff) {
+            return "RESERVE";
+        }
+        return Integer.toString(idx);
+    }
 
     public String getType() {
         return TYPE_DECODE.get(type);
@@ -96,7 +129,7 @@ public class SymtabEntry {
                 TYPE_DECODE.get(type),
                 BIND_DECODE.get(bind),
                 VISIBILITY_DECODE.get(visibility),
-                idx,
+                decodeIdx(idx),
                 name);
     }
 }
