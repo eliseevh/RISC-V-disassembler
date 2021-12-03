@@ -1,5 +1,6 @@
 package disasm.util;
 
+import static disasm.util.BytesOperations.getSignExtension;
 import static disasm.util.InstructionDecoding.getRegisterName;
 
 public final class CompressedInstructionDecoding {
@@ -23,20 +24,22 @@ public final class CompressedInstructionDecoding {
         byte b13to15 = (byte) ((command & 0b1110000000000000) >>> 13);
         byte b5to12 = (byte) (b5to6 | (b7to9 << 2) | (b10to12 << 5));
         byte b2to6 = (byte) (b2to4 | (b5to6 << 3));
-        byte b7to11 = (byte) (b7to9 | ((b10to12 & 0b011) << 2));
+        byte b7to11 = (byte) (b7to9 | ((b10to12 & 0b011) << 3));
         byte b12 = (byte) ((b10to12 & 0b100) >>> 2);
         short b2to12 = (short) (b2to6 | (b7to11 << 5) | (b12 << 10));
         byte b10to11 = (byte) (b10to12 & 0b11);
         byte opcode = (byte) (command & 0b11);
 
-        int jimm = ((b2to12 & 0b10000000000) << 1) + //11
-                ((b2to12 & 0b01000000000) >>> 5) +  //4
-                ((b2to12 & 0b00110000000) << 1) +  //9:8
-                ((b2to12 & 0b00001000000) << 4) +   //10
-                ((b2to12 & 0b00000100000) << 1) +   //6
-                ((b2to12 & 0b00000010000) << 3) +   //7
-                ((b2to12 & 0b00000001110)) +        //3:1
-                ((b2to12 & 0b00000000001) << 5);    //5
+        int jimm = getSignExtension(
+                ((b2to12 & 0b10000000000) << 1) +//11
+                ((b2to12 & 0b01000000000) >>> 5) +   //4
+                ((b2to12 & 0b00110000000) << 1) +    //9:8
+                ((b2to12 & 0b00001000000) << 4) +    //10
+                ((b2to12 & 0b00000100000) << 1) +    //6
+                ((b2to12 & 0b00000010000) << 3) +    //7
+                (b2to12 & 0b00000001110) +           //3:1
+                ((b2to12 & 0b00000000001) << 5),     //5
+        12);
         switch (opcode) {
             case 0b00:
                 switch (b13to15) {
@@ -73,7 +76,7 @@ public final class CompressedInstructionDecoding {
                             int nzimm = (b2to6) + (b12 << 5);
                             // rd/rs is 7-11
                             return String.format("c.addi %s, %d",
-                                    getRegisterName(b7to11), nzimm);
+                                    getRegisterName(b7to11), getSignExtension(nzimm, 6));
                         }
                     }
                     case 0b001 -> {
@@ -83,7 +86,7 @@ public final class CompressedInstructionDecoding {
                         int imm = (b2to6) + (b12 << 5);
                         // rd is 7-11
                         return String.format("c.li %s, %d",
-                                getRegisterName(b7to11), imm);
+                                getRegisterName(b7to11), getSignExtension(imm, 6));
                     }
                     case 0b011 -> {
                         if (b7to11 == 2) {
@@ -92,13 +95,13 @@ public final class CompressedInstructionDecoding {
                                     ((b2to6 & 0b01000) << 3) +  //6
                                     ((b2to6 & 0b00110) << 6) +  //8:7
                                     ((b2to6 & 0b00001) << 5);   //5
-                            return String.format("c.addi16sp sp, %d", nzimm);
+                            return String.format("c.addi16sp sp, %d", getSignExtension(nzimm, 10));
                         } else {
                             int nzimm = (b12 << 17) +           //17
                                     ((b2to6) << 10);            //16:12
                             // rd is 7-11
                             return String.format("c.lui %s, %d",
-                                    getRegisterName(b7to11), nzimm);
+                                    getRegisterName(b7to11), getSignExtension(nzimm, 18));
                         }
                     }
                     case 0b100 -> {
@@ -119,7 +122,7 @@ public final class CompressedInstructionDecoding {
                                 int imm = (b12 << 5) + b2to6;
                                 // rd/rs is 7-9
                                 return String.format("c.andi %s, %d",
-                                        getCompressedRegisterName(b7to9), imm);
+                                        getCompressedRegisterName(b7to9), getSignExtension(imm, 6));
                             }
                             case 0b11 -> {
                                 String inst = switch (b5to6) {
@@ -153,7 +156,7 @@ public final class CompressedInstructionDecoding {
                         }
                         // rs is 7-9
                         return String.format("%s %s, %d",
-                                inst, getCompressedRegisterName(b7to9), imm);
+                                inst, getCompressedRegisterName(b7to9), getSignExtension(imm, 9));
                     }
                 }
 

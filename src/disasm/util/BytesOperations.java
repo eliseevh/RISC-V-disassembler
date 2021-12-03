@@ -32,6 +32,10 @@ public final class BytesOperations {
         return num;
     }
 
+    public static int getSignExtension(int val, int size) {
+        return (val << (32 - size)) >> (32 - size);
+    }
+
     public static int getIntLittleEndian(byte[] bytes, int offset) {
         return getNumLittleEndian(bytes, offset, 4);
     }

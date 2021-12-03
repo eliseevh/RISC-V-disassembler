@@ -2,6 +2,8 @@ package disasm.util;
 
 import disasm.RISC_V.InstructionFormat;
 
+import static disasm.util.BytesOperations.getSignExtension;
+
 public final class InstructionDecoding {
     public static final int OPCODE_MASK = 0x00_00_00_7f;
     public static final int RD_MASK = 0x00_00_0f_80;
@@ -73,7 +75,6 @@ public final class InstructionDecoding {
 
 
     // TODO: replace "throw new AssertionError(...)" with getting unknown_command
-    // TODO: correct work with imm sign extension
 
     public static String getRInstructionRepresentation(int instruction) {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
@@ -206,19 +207,20 @@ public final class InstructionDecoding {
             default:
                 throw new AssertionError("Unexpected opcode (" + opcode + ")");
         }
+        int imm = getSignExtension(imm12, 12);
         return switch (inst) {
             case "ecall", "ebreak" -> inst;
             case "jalr" -> String.format("jalr %s, %d(%s)",
-                    getRegisterName(rd), imm12, getRegisterName(rs1));
+                    getRegisterName(rd), imm, getRegisterName(rs1));
 
             case "lb", "lh", "lw", "lbu", "lhu" -> String.format("%s %s, %d(%s)",
-                    inst, getRegisterName(rd), imm12, getRegisterName(rs1));
+                    inst, getRegisterName(rd), imm, getRegisterName(rs1));
 
             case "slli", "srli", "srai" -> String.format("%s %s, %s, %d",
                     inst, getRegisterName(rd), getRegisterName(rs1), imm12 & 0b11111);
 
             default -> String.format("%s %s, %s, %d",
-                    inst, getRegisterName(rd), getRegisterName(rs1), imm12);
+                    inst, getRegisterName(rd), getRegisterName(rs1), imm);
         };
     }
 
@@ -238,7 +240,7 @@ public final class InstructionDecoding {
         };
         final String source = getRegisterName(rs2);
         final String base = getRegisterName(rs1);
-        final String offset = Integer.toString(imm5 + (imm7 << 5));
+        final String offset = Integer.toString(getSignExtension(imm5 + (imm7 << 5), 12));
         return String.format("%s %s, %s(%s)", inst, source, offset, base);
     }
 
@@ -264,7 +266,7 @@ public final class InstructionDecoding {
                 + ((imm7 & 0b0111111) << 5)
                 + ((imm5 & 0b00001) << 11)
                 + ((imm7 & 0b1000000) << 6);
-        return String.format("%s %s, %s, %d", inst, source1, source2, label);
+        return String.format("%s %s, %s, %d", inst, source1, source2, getSignExtension(label, 13));
     }
 
     public static String getJInstructionRepresentation(int instruction) {
@@ -277,7 +279,7 @@ public final class InstructionDecoding {
                 + ((imm20 & 0b00000000000100000000) << 3)
                 + ((imm20 & 0b00000000000011111111) << 12)
                 + ((imm20 & 0b10000000000000000000) << 1);
-        return String.format("%s %s, %d", inst, dest, offset);
+        return String.format("%s %s, %d", inst, dest, BytesOperations.getSignExtension(offset, 20));
     }
 
     public static String getUInstructionRepresentation(int instruction) {
@@ -290,6 +292,6 @@ public final class InstructionDecoding {
             default -> throw new AssertionError("Unexpected opcode (" + opcode + ")");
         };
         final String dest = getRegisterName(rd);
-        return String.format("%s %s, %d", inst, dest, imm20);
+        return String.format("%s %s, %d", inst, dest, getSignExtension(imm20, 20));
     }
 }
