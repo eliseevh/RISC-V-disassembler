@@ -260,10 +260,10 @@ public final class InstructionDecoding {
         final String source1 = getRegisterName(rs1);
         final String source2 = getRegisterName(rs2);
         int label =
-                  ((imm5 & 0b11110) >>> 1)
-                + ((imm7 & 0b0111111) << 4)
-                + ((imm5 & 0b00001) << 10)
-                + ((imm7 & 0b1000000) << 5);
+                  ((imm5 & 0b11110))
+                + ((imm7 & 0b0111111) << 5)
+                + ((imm5 & 0b00001) << 11)
+                + ((imm7 & 0b1000000) << 6);
         return String.format("%s %s, %s, %d", inst, source1, source2, label);
     }
 
@@ -273,10 +273,10 @@ public final class InstructionDecoding {
         final String inst = "jal";
         final String dest = getRegisterName(rd);
         int offset =
-                  ((imm20 & 0b01111111111000000000) >>> 9)
-                + ((imm20 & 0b00000000000100000000) << 2)
-                + ((imm20 & 0b00000000000011111111) << 11)
-                + ((imm20 & 0b10000000000000000000));
+                  ((imm20 & 0b01111111111000000000) >>> 8)
+                + ((imm20 & 0b00000000000100000000) << 3)
+                + ((imm20 & 0b00000000000011111111) << 12)
+                + ((imm20 & 0b10000000000000000000) << 1);
         return String.format("%s %s, %d", inst, dest, offset);
     }
 
