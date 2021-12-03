@@ -4,6 +4,7 @@ import disasm.ELF.TextSection;
 import disasm.util.BytesOperations;
 import disasm.util.CompressedInstructionDecoding;
 import disasm.util.InstructionDecoding;
+import disasm.util.UnknownCommandError;
 
 import static disasm.util.InstructionDecoding.*;
 
@@ -37,17 +38,25 @@ public class Instruction {
     public String toString() {
         if (isCompressed()) {
             short op = BytesOperations.getShortLittleEndian(instruction, 0);
-            return CompressedInstructionDecoding.getCompressedInstructionRepresentation(op);
+            try {
+                return CompressedInstructionDecoding.getCompressedInstructionRepresentation(op);
+            } catch (UnknownCommandError e) {
+                return "unknown_command";
+            }
         }
         int operation = BytesOperations.getIntLittleEndian(instruction, 0);
-        return switch (format) {
-            case B -> InstructionDecoding.getBInstructionRepresentation(operation);
-            case I -> InstructionDecoding.getIInstructionRepresentation(operation);
-            case J -> InstructionDecoding.getJInstructionRepresentation(operation);
-            case R -> InstructionDecoding.getRInstructionRepresentation(operation);
-            case S -> InstructionDecoding.getSInstructionRepresentation(operation);
-            case U -> InstructionDecoding.getUInstructionRepresentation(operation);
-            default -> "unknown_command";
-        };
+        try {
+            return switch (format) {
+                case B -> InstructionDecoding.getBInstructionRepresentation(operation);
+                case I -> InstructionDecoding.getIInstructionRepresentation(operation);
+                case J -> InstructionDecoding.getJInstructionRepresentation(operation);
+                case R -> InstructionDecoding.getRInstructionRepresentation(operation);
+                case S -> InstructionDecoding.getSInstructionRepresentation(operation);
+                case U -> InstructionDecoding.getUInstructionRepresentation(operation);
+                default -> "unknown_command";
+            };
+        } catch (UnknownCommandError e) {
+            return "unknown_command";
+        }
     }
 }

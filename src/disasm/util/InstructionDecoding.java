@@ -46,6 +46,9 @@ public final class InstructionDecoding {
     }
 
     public static String getRegisterName(int register) {
+        if (register < 0 || register > 31) {
+            throw new IllegalArgumentException("In RISC-V register number must be between 0 and 31, not " + register);
+        }
         switch (register) {
             case 0:
                 return "zero";
@@ -74,9 +77,7 @@ public final class InstructionDecoding {
     }
 
 
-    // TODO: replace "throw new AssertionError(...)" with getting unknown_command
-
-    public static String getRInstructionRepresentation(int instruction) {
+    public static String getRInstructionRepresentation(int instruction) throws UnknownCommandError {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
@@ -94,14 +95,14 @@ public final class InstructionDecoding {
                     case 0x5 -> "srl";
                     case 0x2 -> "slt";
                     case 0x3 -> "sltu";
-                    default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    default -> throw new UnknownCommandError();
                 };
                 break;
             case 0x20:
                 inst = switch (funct3) {
                     case 0x0 -> "sub";
                     case 0x5 -> "sra";
-                    default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    default -> throw new UnknownCommandError();
                 };
                 break;
             case 0x01:
@@ -114,11 +115,11 @@ public final class InstructionDecoding {
                     case 0x5 -> "divu";
                     case 0x6 -> "rem";
                     case 0x7 -> "remu";
-                    default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    default -> throw new UnknownCommandError();
                 };
                 break;
             default:
-                throw new AssertionError("Unexpected funct7 (" + funct7 + ")");
+                throw new UnknownCommandError();
         }
         final String dest = getRegisterName(rd);
         final String first = getRegisterName(rs1);
@@ -126,7 +127,7 @@ public final class InstructionDecoding {
         return String.format("%s %s, %s, %s", inst, dest, first, second);
     }
 
-    public static String getIInstructionRepresentation(int instruction) {
+    public static String getIInstructionRepresentation(int instruction) throws UnknownCommandError {
         byte opcode = (byte) (instruction & OPCODE_MASK);
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
@@ -143,7 +144,7 @@ public final class InstructionDecoding {
                         if ((imm12 & 0b111111100000) == 0) {
                             inst = "slli";
                         } else {
-                            throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                            throw new UnknownCommandError();
                         }
                         break;
                     case 0x2:
@@ -161,7 +162,7 @@ public final class InstructionDecoding {
                         } else if ((imm12 & 0b111111100000) == (0x20 << 5)) {
                             inst = "srai";
                         } else {
-                            throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                            throw new UnknownCommandError();
                         }
                         break;
                     case 0x6:
@@ -171,7 +172,7 @@ public final class InstructionDecoding {
                         inst = "andi";
                         break;
                     default:
-                        throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                        throw new UnknownCommandError();
                 }
                 break;
             case 0b0000011:
@@ -181,14 +182,14 @@ public final class InstructionDecoding {
                     case 0x2 -> "lw";
                     case 0x4 -> "lbu";
                     case 0x5 -> "lhu";
-                    default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    default -> throw new UnknownCommandError();
                 };
                 break;
             case 0b1100111:
                 if (funct3 == 0x0) {
                     inst = "jalr";
                 } else {
-                    throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    throw new UnknownCommandError();
                 }
                 break;
             case 0b1110011:
@@ -198,14 +199,14 @@ public final class InstructionDecoding {
                     } else if (imm12 == 0x1) {
                         inst = "ebreak";
                     } else {
-                        throw new AssertionError("Unexpected imm (" + imm12 + ")");
+                        throw new UnknownCommandError();
                     }
                 } else {
-                    throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+                    throw new UnknownCommandError();
                 }
                 break;
             default:
-                throw new AssertionError("Unexpected opcode (" + opcode + ")");
+                throw new UnknownCommandError();
         }
         int imm = getSignExtension(imm12, 12);
         return switch (inst) {
@@ -224,7 +225,7 @@ public final class InstructionDecoding {
         };
     }
 
-    public static String getSInstructionRepresentation(int instruction) {
+    public static String getSInstructionRepresentation(int instruction) throws UnknownCommandError {
         // imm5 is in the rd place
         byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
@@ -236,7 +237,7 @@ public final class InstructionDecoding {
             case 0x0 -> "sb";
             case 0x1 -> "sh";
             case 0x2 -> "sw";
-            default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+            default -> throw new UnknownCommandError();
         };
         final String source = getRegisterName(rs2);
         final String base = getRegisterName(rs1);
@@ -244,7 +245,7 @@ public final class InstructionDecoding {
         return String.format("%s %s, %s(%s)", inst, source, offset, base);
     }
 
-    public static String getBInstructionRepresentation(int instruction) {
+    public static String getBInstructionRepresentation(int instruction) throws UnknownCommandError {
         byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
@@ -257,7 +258,7 @@ public final class InstructionDecoding {
             case 0x5 -> "bge";
             case 0x6 -> "bltu";
             case 0x7 -> "bgeu";
-            default -> throw new AssertionError("Unexpected funct3 (" + funct3 + ")");
+            default -> throw new UnknownCommandError();
         };
         final String source1 = getRegisterName(rs1);
         final String source2 = getRegisterName(rs2);
@@ -282,14 +283,14 @@ public final class InstructionDecoding {
         return String.format("%s %s, %d", inst, dest, BytesOperations.getSignExtension(offset, 20));
     }
 
-    public static String getUInstructionRepresentation(int instruction) {
+    public static String getUInstructionRepresentation(int instruction) throws UnknownCommandError {
         byte opcode = (byte) (instruction & OPCODE_MASK);
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         int imm20 = (instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK)) >>> FUNCT_3_SHIFT;
         final String inst = switch (opcode) {
             case 0b0110111 -> "lui";
             case 0b0010111 -> "auipc";
-            default -> throw new AssertionError("Unexpected opcode (" + opcode + ")");
+            default -> throw new UnknownCommandError();
         };
         final String dest = getRegisterName(rd);
         return String.format("%s %s, %d", inst, dest, getSignExtension(imm20, 20));

@@ -13,9 +13,7 @@ public final class CompressedInstructionDecoding {
         return "a" + (register - 2);
     }
 
-
-    // TODO: replace "throw new AssertionError(...)" with getting unknown_command
-    public static String getCompressedInstructionRepresentation(short command) {
+    public static String getCompressedInstructionRepresentation(short command) throws UnknownCommandError {
         byte b2to4 =   (byte) ((command & 0b0000000000011100) >>> 2);
         byte b5to6 =   (byte) ((command & 0b0000000001100000) >>> 5);
         byte b7to9 =   (byte) ((command & 0b0000001110000000) >>> 7);
@@ -65,7 +63,7 @@ public final class CompressedInstructionDecoding {
                         return String.format("%s %s, %d(%s)",
                                 inst, getCompressedRegisterName(b2to4), uimm, getCompressedRegisterName(b7to9));
                     }
-                    default -> throw new AssertionError("Unexpected funct3 (" + b13to15 + ")");
+                    default -> throw new UnknownCommandError();
                 }
             case 0b01:
                 switch (b13to15) {
@@ -158,7 +156,7 @@ public final class CompressedInstructionDecoding {
                         return String.format("%s %s, %d",
                                 inst, getCompressedRegisterName(b7to9), getSignExtension(imm, 9));
                     }
-                    default -> throw new AssertionError("Unexpected funct3 (" + b13to15 + ")");
+                    default -> throw new UnknownCommandError();
                 }
             case 0b10:
                 switch (b13to15) {
@@ -210,7 +208,7 @@ public final class CompressedInstructionDecoding {
                         // rs is 2-6
                         return String.format("c.swsp %s, %d", getRegisterName(b2to6), uimm);
                     }
-                    default -> throw new AssertionError("Unexpected funct3 (" + b13to15 + ")");
+                    default -> throw new UnknownCommandError();
                 }
             default:
                 throw new AssertionError("Wrong opcode");
