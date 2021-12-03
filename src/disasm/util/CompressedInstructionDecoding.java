@@ -15,7 +15,6 @@ public final class CompressedInstructionDecoding {
 
 
     // TODO: replace "throw new AssertionError(...)" with getting unknown_command
-    // TODO: correct work with imm sign extension
     public static String getCompressedInstructionRepresentation(short command) {
         byte b2to4 =   (byte) ((command & 0b0000000000011100) >>> 2);
         byte b5to6 =   (byte) ((command & 0b0000000001100000) >>> 5);
@@ -26,6 +25,7 @@ public final class CompressedInstructionDecoding {
         byte b2to6 = (byte) (b2to4 | (b5to6 << 3));
         byte b7to11 = (byte) (b7to9 | ((b10to12 & 0b011) << 3));
         byte b12 = (byte) ((b10to12 & 0b100) >>> 2);
+        byte b7to12 = (byte) (b7to11 | (b12 << 5));
         short b2to12 = (short) (b2to6 | (b7to11 << 5) | (b12 << 10));
         byte b10to11 = (byte) (b10to12 & 0b11);
         byte opcode = (byte) (command & 0b11);
@@ -130,13 +130,13 @@ public final class CompressedInstructionDecoding {
                                     case 0b01 -> "c.xor";
                                     case 0b10 -> "c.or";
                                     case 0b11 -> "c.and";
-                                    default -> throw new AssertionError("Unexpected 5, 6 bits ("
-                                            + b5to6 + ")");
+                                    default -> throw new AssertionError("Wrong b5to6");
                                 };
                                 // rd/rs1 is 7-9, rs2 is 2-4
                                 return String.format("%s %s, %s",
                                         inst, getCompressedRegisterName(b7to9), getCompressedRegisterName(b2to4));
                             }
+                            default -> throw new AssertionError("Wrong b10to11");
                         }
                     }
                     case 0b101 -> {
@@ -158,9 +158,62 @@ public final class CompressedInstructionDecoding {
                         return String.format("%s %s, %d",
                                 inst, getCompressedRegisterName(b7to9), getSignExtension(imm, 9));
                     }
+                    default -> throw new AssertionError("Unexpected funct3 (" + b13to15 + ")");
                 }
-
+            case 0b10:
+                switch (b13to15) {
+                    case 0b000 -> {
+                        int shamt = (b12 << 5) + b2to6;
+                        // rd/rs is 7-11
+                        return String.format("c.slli %s, %d",
+                                getRegisterName(b7to11), shamt);
+                    }
+                    case 0b010 -> {
+                        int uimm = (b12 << 5) +           //5
+                                ((b2to6 & 0b11100)) +     //4:2
+                                ((b2to6 & 0b00011) << 6); //7:6
+                        // rd is 7-11
+                        return String.format("c.lwsp %s, %d", getRegisterName(b7to11), uimm);
+                    }
+                    case 0b100 -> {
+                        if (b12 == 0) {
+                            if (b2to6 == 0) {
+                                // rs is 7-11
+                                return String.format("c.jr %s", getRegisterName(b7to11));
+                            } else {
+                                // rd is 7-11, rs is 2-6
+                                return String.format("c.mv %s, %s", getRegisterName(b7to11), getRegisterName(b2to6));
+                            }
+                        } else {
+                            if (b7to11 == 0) {
+                                if (b2to6 == 0) {
+                                    return "c.ebreak";
+                                } else {
+                                    // rs2 is 2-6
+                                    return String.format("c.add zero, %s", getRegisterName(b2to6));
+                                }
+                            } else {
+                                if (b2to6 == 0) {
+                                    // rs is 7-11
+                                    return String.format("c.jalr %s", getRegisterName(b7to11));
+                                } else {
+                                    // rd/rs1 is 7-11, rs2 is 2-6
+                                    return String.format("c.add %s, %s",
+                                            getRegisterName(b7to11), getRegisterName(b2to6));
+                                }
+                            }
+                        }
+                    }
+                    case 0b110 -> {
+                        int uimm = (b7to12 & 0b111100) +     //5:2
+                                ((b7to12 & 0b000011) << 6);  //7:6
+                        // rs is 2-6
+                        return String.format("c.swsp %s, %d", getRegisterName(b2to6), uimm);
+                    }
+                    default -> throw new AssertionError("Unexpected funct3 (" + b13to15 + ")");
+                }
+            default:
+                throw new AssertionError("Wrong opcode");
         }
-        return null;
     }
 }

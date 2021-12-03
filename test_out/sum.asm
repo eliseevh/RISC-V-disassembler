@@ -4,7 +4,7 @@
 0001007a                        auipc a0, 0
 0001007e                        addi a0, a0, 694
 00010082                        c.j 742
-00010084                        null
+00010084                        c.jr ra
 00010086                _start: auipc gp, 2
 0001008a                        addi gp, gp, -1126
 0001008e                        addi a0, gp, -964
@@ -19,16 +19,16 @@
 000100aa                        addi a0, a0, 650
 000100ae                        c.jal 698
 000100b0                        c.jal 176
-000100b2                        null
+000100b2                        c.lwsp a0, 0
 000100b4                        addi4spn a1, sp, 4
 000100b6                        c.li a2, 0
 000100b8                        c.jal 116
 000100ba                        c.j 140
 000100bc __do_global_dtors_aux: c.addi sp, -16
-000100be                        null
+000100be                        c.swsp s0, 8
 000100c0                        addi s0, gp, -964
 000100c4                        lbu a5, 0(s0)
-000100c8                        null
+000100c8                        c.swsp ra, 12
 000100ca                        c.bnez a5, 30
 000100cc                        addi a5, zero, 0
 000100d0                        c.beqz a5, 18
@@ -38,10 +38,10 @@
 000100de                        jalr ra, 0(zero)
 000100e2                        c.li a5, 1
 000100e4                        sb a5, 0(s0)
-000100e8                        null
-000100ea                        null
+000100e8                        c.lwsp ra, 12
+000100ea                        c.lwsp s0, 8
 000100ec                        c.addi sp, 16
-000100ee                        null
+000100ee                        c.jr ra
 000100f0           frame_dummy: addi a5, zero, 0
 000100f4                        c.beqz a5, 22
 000100f6                        addi a1, gp, -960
@@ -49,61 +49,61 @@
 000100fe                        addi a0, a0, 778
 00010102                        auipc t1, 0
 00010106                        jalr zero, 0(zero)
-0001010a                        null
+0001010a                        c.jr ra
 0001010c                   sum: c.addi sp, -32
-0001010e                        null
+0001010e                        c.swsp s0, 28
 00010110                        addi4spn s0, sp, 32
 00010112                        sw a0, -20(s0)
 00010116                        sw a1, -24(s0)
 0001011a                        lw a4, -20(s0)
 0001011e                        lw a5, -24(s0)
-00010122                        null
-00010124                        null
-00010126                        null
+00010122                        c.add a5, a4
+00010124                        c.mv a0, a5
+00010126                        c.lwsp s0, 28
 00010128                        c.addi16sp sp, 32
-0001012a                        null
+0001012a                        c.jr ra
 0001012c                  main: c.addi sp, -16
-0001012e                        null
-00010130                        null
+0001012e                        c.swsp ra, 12
+00010130                        c.swsp s0, 8
 00010132                        addi4spn s0, sp, 16
 00010134                        c.li a1, 3
 00010136                        c.li a0, 3
 00010138                        c.jal -44
 0001013a                        c.li a5, 0
-0001013c                        null
-0001013e                        null
-00010140                        null
+0001013c                        c.mv a0, a5
+0001013e                        c.lwsp ra, 12
+00010140                        c.lwsp s0, 8
 00010142                        c.addi sp, 16
-00010144                        null
+00010144                        c.jr ra
 00010146                  exit: c.addi sp, -16
 00010148                        c.li a1, 0
-0001014a                        null
-0001014c                        null
-0001014e                        null
+0001014a                        c.swsp s0, 8
+0001014c                        c.swsp ra, 12
+0001014e                        c.mv s0, a0
 00010150                        c.jal 290
 00010152                        lw a0, -976(gp)
 00010156                        c.lw a5, 60(a0)
 00010158                        c.beqz a5, 4
-0001015a                        null
-0001015c                        null
+0001015a                        c.jalr a5
+0001015c                        c.mv a0, s0
 0001015e                        c.jal 640
 00010160     __libc_init_array: c.addi sp, -16
-00010162                        null
-00010164                        null
+00010162                        c.swsp s0, 8
+00010164                        c.swsp s2, 0
 00010166                        auipc s0, 1
 0001016a                        addi s0, s0, 674
 0001016e                        auipc s2, 1
 00010172                        addi s2, s2, 666
 00010176                        sub s2, s2, s0
-0001017a                        null
-0001017c                        null
+0001017a                        c.swsp ra, 12
+0001017c                        c.swsp s1, 4
 0001017e                        srai s2, s2, 2
 00010182                        beq s2, zero, 18
 00010186                        c.li s1, 0
 00010188                        c.lw a5, 0(s0)
 0001018a                        c.addi s1, 1
 0001018c                        c.addi s0, 4
-0001018e                        null
+0001018e                        c.jalr a5
 00010190                        bne s2, s1, -8
 00010194                        auipc s0, 1
 00010198                        addi s0, s0, 628
@@ -116,23 +116,23 @@
 000101b2                        c.lw a5, 0(s0)
 000101b4                        c.addi s1, 1
 000101b6                        c.addi s0, 4
-000101b8                        null
+000101b8                        c.jalr a5
 000101ba                        bne s2, s1, -8
-000101be                        null
-000101c0                        null
-000101c2                        null
-000101c4                        null
+000101be                        c.lwsp ra, 12
+000101c0                        c.lwsp s0, 8
+000101c2                        c.lwsp s1, 4
+000101c4                        c.lwsp s2, 0
 000101c6                        c.addi sp, 16
-000101c8                        null
+000101c8                        c.jr ra
 000101ca                memset: c.li t1, 15
-000101cc                        null
+000101cc                        c.mv a4, a0
 000101ce                        bgeu t1, a2, 38
 000101d2                        andi a5, a4, 15
 000101d6                        c.bnez a5, 126
 000101d8                        c.bnez a1, 106
 000101da                        andi a3, a2, -16
 000101de                        c.andi a2, 15
-000101e0                        null
+000101e0                        c.add a3, a4
 000101e2                        c.sw a1, 0(a4)
 000101e4                        c.sw a1, 4(a4)
 000101e6                        c.sw a1, 8(a4)
@@ -140,11 +140,11 @@
 000101ea                        c.addi a4, 16
 000101ec                        bltu a4, a3, -10
 000101f0                        c.bnez a2, 4
-000101f2                        null
+000101f2                        c.jr ra
 000101f4                        sub a3, t1, a2
-000101f8                        null
+000101f8                        c.slli a3, 2
 000101fa                        auipc t0, 0
-000101fe                        null
+000101fe                        c.add a3, t0
 00010200                        jalr zero, 10(a3)
 00010204                        sb a1, 14(a4)
 00010208                        sb a1, 13(a4)
@@ -161,7 +161,7 @@
 00010234                        sb a1, 2(a4)
 00010238                        sb a1, 1(a4)
 0001023c                        sb a1, 0(a4)
-00010240                        null
+00010240                        c.jr ra
 00010242                        andi a1, a1, 255
 00010246                        slli a3, a1, 8
 0001024a                        c.or a1, a3
@@ -170,56 +170,56 @@
 00010252                        c.j -120
 00010254                        slli a3, a5, 2
 00010258                        auipc t0, 0
-0001025c                        null
-0001025e                        null
+0001025c                        c.add a3, t0
+0001025e                        c.mv t0, ra
 00010260                        jalr ra, -88(a3)
-00010264                        null
+00010264                        c.mv ra, t0
 00010266                        c.addi a5, -16
 00010268                        c.sub a4, a5
-0001026a                        null
+0001026a                        c.add a2, a5
 0001026c                        bgeu t1, a2, -120
 00010270                        c.j -152
 00010272      __call_exitprocs: c.addi16sp sp, -48
-00010274                        null
+00010274                        c.swsp s4, 24
 00010276                        lw s4, -976(gp)
-0001027a                        null
+0001027a                        c.swsp s2, 32
 0001027c                        lw s2, 328(s4)
-00010280                        null
-00010282                        null
-00010284                        null
-00010286                        null
-00010288                        null
-0001028a                        null
-0001028c                        null
-0001028e                        null
+00010280                        c.swsp ra, 44
+00010282                        c.swsp s0, 40
+00010284                        c.swsp s1, 36
+00010286                        c.swsp s3, 28
+00010288                        c.swsp s5, 20
+0001028a                        c.swsp s6, 16
+0001028c                        c.swsp s7, 12
+0001028e                        c.swsp s8, 8
 00010290                        beq s2, zero, 48
-00010294                        null
-00010296                        null
+00010294                        c.mv s6, a0
+00010296                        c.mv s7, a1
 00010298                        c.li s5, 1
 0001029a                        c.li s3, -1
 0001029c                        lw s1, 4(s2)
 000102a0                        addi s0, s1, -1
 000102a4                        blt s0, zero, 28
-000102a8                        null
-000102aa                        null
+000102a8                        c.slli s1, 2
+000102aa                        c.add s1, s2
 000102ac                        beq s7, zero, 44
 000102b0                        lw a5, 260(s1)
 000102b4                        beq a5, s7, 36
 000102b8                        c.addi s0, -1
 000102ba                        c.addi s1, -4
 000102bc                        bne s0, s3, -16
-000102c0                        null
-000102c2                        null
-000102c4                        null
-000102c6                        null
-000102c8                        null
-000102ca                        null
-000102cc                        null
-000102ce                        null
-000102d0                        null
-000102d2                        null
+000102c0                        c.lwsp ra, 44
+000102c2                        c.lwsp s0, 40
+000102c4                        c.lwsp s1, 36
+000102c6                        c.lwsp s2, 32
+000102c8                        c.lwsp s3, 28
+000102ca                        c.lwsp s4, 24
+000102cc                        c.lwsp s5, 20
+000102ce                        c.lwsp s6, 16
+000102d0                        c.lwsp s7, 12
+000102d2                        c.lwsp s8, 8
 000102d4                        c.addi16sp sp, 48
-000102d6                        null
+000102d6                        c.jr ra
 000102d8                        lw a5, 4(s2)
 000102dc                        c.lw a3, 4(s1)
 000102de                        c.addi a5, -1
@@ -231,50 +231,50 @@
 000102f2                        lw s8, 4(s2)
 000102f6                        c.and a5, a4
 000102f8                        c.bnez a5, 26
-000102fa                        null
+000102fa                        c.jalr a3
 000102fc                        lw a4, 4(s2)
 00010300                        lw a5, 328(s4)
 00010304                        bne a4, s8, 8
 00010308                        beq a5, s2, -80
 0001030c                        c.beqz a5, -76
-0001030e                        null
+0001030e                        c.mv s2, a5
 00010310                        c.j -116
 00010312                        lw a5, 396(s2)
 00010316                        lw a1, 132(s1)
 0001031a                        c.and a4, a5
 0001031c                        c.bnez a4, 14
-0001031e                        null
-00010320                        null
+0001031e                        c.mv a0, s6
+00010320                        c.jalr a3
 00010322                        c.j -38
 00010324                        sw s0, 4(s2)
 00010328                        c.j -64
-0001032a                        null
-0001032c                        null
+0001032a                        c.mv a0, a1
+0001032c                        c.jalr a3
 0001032e                        c.j -50
 00010330     __libc_fini_array: c.addi sp, -16
-00010332                        null
+00010332                        c.swsp s0, 8
 00010334                        auipc a5, 1
 00010338                        addi a5, a5, 224
 0001033c                        auipc s0, 1
 00010340                        addi s0, s0, 212
 00010344                        c.sub a5, s0
-00010346                        null
-00010348                        null
+00010346                        c.swsp s1, 4
+00010348                        c.swsp ra, 12
 0001034a                        srai s1, a5, 2
 0001034e                        c.beqz s1, 16
 00010350                        c.addi a5, -4
-00010352                        null
+00010352                        c.add s0, a5
 00010354                        c.lw a5, 0(s0)
 00010356                        c.addi s1, -1
 00010358                        c.addi s0, -4
-0001035a                        null
+0001035a                        c.jalr a5
 0001035c                        c.bnez s1, -8
-0001035e                        null
-00010360                        null
-00010362                        null
+0001035e                        c.lwsp ra, 12
+00010360                        c.lwsp s0, 8
+00010362                        c.lwsp s1, 4
 00010364                        c.addi sp, 16
-00010366                        null
-00010368                atexit: null
+00010366                        c.jr ra
+00010368                atexit: c.mv a1, a0
 0001036a                        c.li a3, 0
 0001036c                        c.li a2, 0
 0001036e                        c.li a0, 0
@@ -299,10 +299,10 @@
 000103aa                        beq a0, a3, 26
 000103ae                        c.addi a4, 1
 000103b0                        c.sw a4, 4(a5)
-000103b2                        null
+000103b2                        c.add a5, a6
 000103b4                        c.sw a1, 8(a5)
 000103b6                        c.li a0, 0
-000103b8                        null
+000103b8                        c.jr ra
 000103ba                        addi a5, a4, 332
 000103be                        sw a5, 328(a4)
 000103c2                        c.j -70
@@ -311,26 +311,26 @@
 000103ca                        c.sw a4, 4(a5)
 000103cc                        c.or a2, a3
 000103ce                        sw a2, 396(a5)
-000103d2                        null
+000103d2                        c.add a5, a6
 000103d4                        c.sw a1, 8(a5)
 000103d6                        c.li a0, 0
-000103d8                        null
+000103d8                        c.jr ra
 000103da                        c.li a0, -1
-000103dc                        null
+000103dc                        c.jr ra
 000103de                 _exit: addi a7, zero, 93
 000103e2                        ecall
 000103e6                        blt a0, zero, 6
 000103ea                        c.j 0
 000103ec                        c.addi sp, -16
-000103ee                        null
-000103f0                        null
-000103f2                        null
+000103ee                        c.swsp s0, 8
+000103f0                        c.mv s0, a0
+000103f2                        c.swsp ra, 12
 000103f4                        sub s0, zero, s0
 000103f8                        c.jal 6
 000103fa                        c.sw s0, 0(a0)
 000103fc                        c.j 0
 000103fe               __errno: lw a0, -968(gp)
-00010402                        null
+00010402                        c.jr ra
 
 .symtab
 Symbol Value              Size Type     Bind     Vis       Index Name
