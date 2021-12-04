@@ -33,6 +33,7 @@ public final class BytesOperations {
     }
 
     public static int getSignExtension(int val, int size) {
+        // >> is arithmetic shift, so it works fine
         return (val << (32 - size)) >> (32 - size);
     }
 
