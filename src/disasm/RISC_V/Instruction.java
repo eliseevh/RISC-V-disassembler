@@ -59,4 +59,17 @@ public class Instruction {
             return "unknown_command";
         }
     }
+
+    public Integer getJumpOffset() {
+        if (format == InstructionFormat.COMPRESSED) {
+            short command = BytesOperations.getShortLittleEndian(this.instruction, 0);
+            return CompressedInstructionDecoding.getCompressedJumpOffset(command);
+        }
+        int instruction = BytesOperations.getIntLittleEndian(this.instruction, 0);
+        return switch (format) {
+            case B -> InstructionDecoding.getBFormatOffset(instruction);
+            case J -> InstructionDecoding.getJFormatOffset(instruction);
+            default -> null;
+        };
+    }
 }

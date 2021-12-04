@@ -36,7 +36,8 @@ public final class InstructionDecoding {
     public static InstructionFormat getStandardFormat(byte opcode) {
         return switch (opcode) {
             case 0b0110011 -> InstructionFormat.R;
-            case 0b0010011, 0b0000011, 0b1100111, 0b1110011 -> InstructionFormat.I;
+            case 0b0010011, 0b0000011, 0b1100111 -> InstructionFormat.I;
+            case 0b1110011 -> InstructionFormat.SYSTEM;
             case 0b0100011 -> InstructionFormat.S;
             case 0b1100011 -> InstructionFormat.B;
             case 0b1101111 -> InstructionFormat.J;
@@ -74,6 +75,148 @@ public final class InstructionDecoding {
             return "s" + (register - 16);
         }
         return "t" + (register - 25);
+    }
+
+
+    public static String getCSRName(int csr) {
+        switch (csr) {
+            case 0x000:
+                return "ustatus";
+            case 0x004:
+                return "uie";
+            case 0x005:
+                return "utvec";
+            case 0x040:
+                return "uscratch";
+            case 0x041:
+                return "uepc";
+            case 0x042:
+                return "ucause";
+            case 0x043:
+                return "utval";
+            case 0x044:
+                return "uip";
+            case 0x001:
+                return "fflags";
+            case 0x002:
+                return "frm";
+            case 0x003:
+                return "fcsr";
+            case 0xc00:
+                return "cycle";
+            case 0xc01:
+                return "time";
+            case 0xc02:
+                return "instret";
+            case 0xc80:
+                return "cycleh";
+            case 0xc81:
+                return "timeh";
+            case 0xc82:
+                return "instreth";
+            case 0x100:
+                return "sstatus";
+            case 0x102:
+                return "sedeleg";
+            case 0x103:
+                return "sideleg";
+            case 0x104:
+                return "sie";
+            case 0x105:
+                return "stvec";
+            case 0x106:
+                return "scounteren";
+            case 0x140:
+                return "sscratch";
+            case 0x141:
+                return "sepc";
+            case 0x142:
+                return "scause";
+            case 0x143:
+                return "stval";
+            case 0x144:
+                return "sip";
+            case 0x180:
+                return "satp";
+            case 0xf11:
+                return "mvendorid";
+            case 0xf12:
+                return "marchid";
+            case 0xf13:
+                return "mimpid";
+            case 0xf14:
+                return "mhartid";
+            case 0x300:
+                return "mstatus";
+            case 0x301:
+                return "misa";
+            case 0x302:
+                return "medeleg";
+            case 0x303:
+                return "mideleg";
+            case 0x304:
+                return "mie";
+            case 0x305:
+                return "mtvec";
+            case 0x306:
+                return "mcounteren";
+            case 0x340:
+                return "mscratch";
+            case 0x341:
+                return "mepc";
+            case 0x342:
+                return "mcause";
+            case 0x343:
+                return "mtval";
+            case 0x344:
+                return "mip";
+            case 0xb00:
+                return "mcycle";
+            case 0xb02:
+                return "minstret";
+            case 0xb80:
+                return "mcycleh";
+            case 0xb82:
+                return "minstreth";
+            case 0x320:
+                return "mcountinhibit";
+            case 0x7a0:
+                return "tselect";
+            case 0x7b0:
+                return "dcsr";
+            case 0x7b1:
+                return "dpc";
+            case 0x7b2:
+                return "dscratch0";
+            case 0x7b3:
+                return "dscratch1";
+
+        }
+        if (0xc03 <=  csr && csr <= 0xc1f) {
+            return "hpmcounter" + (csr - 0xc00);
+        }
+        if (0xc83 <= csr && csr <= 0xc9f) {
+            return "hpmcounter" + (csr - 0xc80) + "h";
+        }
+        if (0x3a0 <= csr && csr <= 0x3a3) {
+            return "pmpcfg" + (csr - 0x3a0);
+        }
+        if (0x3b0 <= csr && csr <= 0x3bf) {
+            return "pmpaddr" + (csr - 0x3b0);
+        }
+        if (0xb03 <= csr && csr <= 0xb1f) {
+            return "mhpmcounter" + (csr - 0xb00);
+        }
+        if (0xb83 <= csr && csr <= 0xb9f) {
+            return "mhpmcounter" + (csr - 0xb80) + "h";
+        }
+        if (0x323 <= csr && csr <= 0x33f) {
+            return "mhpmevent" + (csr - 0x320);
+        }
+        if (0x7a1 <= csr && csr <= 0x7a3) {
+            return "tdata" + (csr - 0x7a0);
+        }
+        return Integer.toString(csr);
     }
 
 
@@ -125,6 +268,26 @@ public final class InstructionDecoding {
         final String first = getRegisterName(rs1);
         final String second = getRegisterName(rs2);
         return String.format("%s %s, %s, %s", inst, dest, first, second);
+    }
+
+    public static String getSystemInstructionRepresentation(int instruction) throws  UnknownCommandError {
+        byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
+        byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
+        short imm12 = (short) ((instruction & (RS_2_MASK | FUNCT_7_MASK)) >>> RS_2_SHIFT);
+        final String inst;
+        if (funct3 == 0x0) {
+            if (imm12 == 0x0) {
+                inst = "ecall";
+            } else if (imm12 == 0x1) {
+                inst = "ebreak";
+            } else {
+                throw new UnknownCommandError();
+            }
+            return inst;
+        } else {
+            throw new UnsupportedOperationException("CSR commands representation are not supported yet");
+        }
     }
 
     public static String getIInstructionRepresentation(int instruction) throws UnknownCommandError {
@@ -192,25 +355,11 @@ public final class InstructionDecoding {
                     throw new UnknownCommandError();
                 }
                 break;
-            case 0b1110011:
-                if (funct3 == 0x0) {
-                    if (imm12 == 0x0) {
-                        inst = "ecall";
-                    } else if (imm12 == 0x1) {
-                        inst = "ebreak";
-                    } else {
-                        throw new UnknownCommandError();
-                    }
-                } else {
-                    throw new UnknownCommandError();
-                }
-                break;
             default:
                 throw new UnknownCommandError();
         }
         int imm = getSignExtension(imm12, 12);
         return switch (inst) {
-            case "ecall", "ebreak" -> inst;
             case "jalr" -> String.format("jalr %s, %d(%s)",
                     getRegisterName(rd), imm, getRegisterName(rs1));
 
@@ -231,7 +380,7 @@ public final class InstructionDecoding {
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
         byte rs2 = (byte) ((instruction & RS_2_MASK) >>> RS_2_SHIFT);
-        // imm7 in in the funct7 place
+        // imm7 is in the funct7 place
         byte imm7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
         final String inst = switch (funct3) {
             case 0x0 -> "sb";
@@ -246,11 +395,9 @@ public final class InstructionDecoding {
     }
 
     public static String getBInstructionRepresentation(int instruction) throws UnknownCommandError {
-        byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
         byte funct3 = (byte) ((instruction & FUNCT_3_MASK) >>> FUNCT_3_SHIFT);
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
         byte rs2 = (byte) ((instruction & RS_2_MASK) >>> RS_2_SHIFT);
-        byte imm7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
         final String inst = switch (funct3) {
             case 0x0 -> "beq";
             case 0x1 -> "bne";
@@ -262,25 +409,36 @@ public final class InstructionDecoding {
         };
         final String source1 = getRegisterName(rs1);
         final String source2 = getRegisterName(rs2);
+        int label = getBFormatOffset(instruction);
+        return String.format("%s %s, %s, %d", inst, source1, source2, label);
+    }
+
+    public static int getBFormatOffset(int instruction) {
+        byte imm5 = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
+        byte imm7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
         int label =
-                  ((imm5 & 0b11110))
-                + ((imm7 & 0b0111111) << 5)
-                + ((imm5 & 0b00001) << 11)
-                + ((imm7 & 0b1000000) << 6);
-        return String.format("%s %s, %s, %d", inst, source1, source2, getSignExtension(label, 13));
+                ((imm5 & 0b11110))
+                        + ((imm7 & 0b0111111) << 5)
+                        + ((imm5 & 0b00001) << 11)
+                        + ((imm7 & 0b1000000) << 6);
+        return  getSignExtension(label, 13);
     }
 
     public static String getJInstructionRepresentation(int instruction) {
         byte rd = (byte) ((instruction & RD_MASK) >>> RD_SHIFT);
-        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
         final String inst = "jal";
         final String dest = getRegisterName(rd);
-        int offset =
-                  ((imm20 & 0b01111111111000000000) >>> 8)
+        int offset = getJFormatOffset(instruction);
+        return String.format("%s %s, %d", inst, dest, offset);
+    }
+
+    public static int getJFormatOffset(int instruction) {
+        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
+        int offset = ((imm20 & 0b01111111111000000000) >>> 8)
                 + ((imm20 & 0b00000000000100000000) << 3)
                 + ((imm20 & 0b00000000000011111111) << 12)
                 + ((imm20 & 0b10000000000000000000) << 1);
-        return String.format("%s %s, %d", inst, dest, BytesOperations.getSignExtension(offset, 20));
+        return BytesOperations.getSignExtension(offset, 21);
     }
 
     public static String getUInstructionRepresentation(int instruction) throws UnknownCommandError {

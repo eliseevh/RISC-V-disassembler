@@ -214,4 +214,49 @@ public final class CompressedInstructionDecoding {
                 throw new AssertionError("Wrong opcode");
         }
     }
+
+    public static Integer getCompressedJumpOffset(short command) {
+        byte b2to4 =   (byte) ((command & 0b0000000000011100) >>> 2);
+        byte b5to6 =   (byte) ((command & 0b0000000001100000) >>> 5);
+        byte b7to9 =   (byte) ((command & 0b0000001110000000) >>> 7);
+        byte b10to12 = (byte) ((command & 0b0001110000000000) >>> 10);
+        byte b13to15 = (byte) ((command & 0b1110000000000000) >>> 13);
+        byte b2to6 = (byte) (b2to4 | (b5to6 << 3));
+        byte b7to11 = (byte) (b7to9 | ((b10to12 & 0b011) << 3));
+        byte b12 = (byte) ((b10to12 & 0b100) >>> 2);
+        short b2to12 = (short) (b2to6 | (b7to11 << 5) | (b12 << 10));
+        byte opcode = (byte) (command & 0b11);
+
+        int jimm = getSignExtension(
+                ((b2to12 & 0b10000000000) << 1) +//11
+                        ((b2to12 & 0b01000000000) >>> 5) +   //4
+                        ((b2to12 & 0b00110000000) << 1) +    //9:8
+                        ((b2to12 & 0b00001000000) << 4) +    //10
+                        ((b2to12 & 0b00000100000) << 1) +    //6
+                        ((b2to12 & 0b00000010000) << 3) +    //7
+                        (b2to12 & 0b00000001110) +           //3:1
+                        ((b2to12 & 0b00000000001) << 5),     //5
+                12);
+
+        if (opcode == 0b01) {
+            switch (b13to15) {
+                case 0b001, 0b101 -> {
+                    return jimm;
+                }
+                case 0b110, 0b111 -> {
+                    int imm = ((b10to12 & 0b100) << 6) +   //8
+                            ((b10to12 & 0b011) << 3) +     //4:3
+                            ((b2to6 & 0b11000) << 3) +     //7:6
+                            ((b2to6 & 0b00110)) +          //2:1
+                            ((b2to6 & 0b00001) << 5);      //5
+                    return getSignExtension(imm, 9);
+                }
+                default -> {
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
+    }
 }
