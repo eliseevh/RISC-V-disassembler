@@ -14,7 +14,7 @@ public class DisassemblerToString {
 
     public DisassemblerToString(SymtabSection symtab, TextSection text) {
         instructions = new InstructionsParser(text).getInstructions();
-        labels = new LabelsParser(symtab).getLabels();
+        labels = new LabelsParser(symtab, instructions).getLabels();
         this.symtab = symtab;
         int maxv = 0;
         for (Map.Entry<Integer, String> label : labels.entrySet()) {
@@ -51,6 +51,16 @@ public class DisassemblerToString {
         if (labels.containsKey(addr)) {
             label = labels.get(addr) + ":";
         }
-        return String.format("%08x %" + (maxLabelLen + 1) + "s %s\n", addr, label, inst);
+        StringBuilder builder = new StringBuilder(
+                String.format("%08x %" + (maxLabelLen + 1) + "s %s", addr, label, inst));
+
+
+        // add comment with jump destination label
+        if (inst.getJumpOffset() != null) {
+            builder.append(" # " + labels.get(inst.getAddress() + inst.getJumpOffset()));
+        }
+
+        builder.append("\n");
+        return builder.toString();
     }
 }
