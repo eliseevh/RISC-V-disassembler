@@ -53,6 +53,7 @@ public class Instruction {
                 case R -> InstructionDecoding.getRInstructionRepresentation(operation);
                 case S -> InstructionDecoding.getSInstructionRepresentation(operation);
                 case U -> InstructionDecoding.getUInstructionRepresentation(operation);
+                case SYSTEM -> InstructionDecoding.getSystemInstructionRepresentation(operation);
                 default -> "unknown_command";
             };
         } catch (UnknownCommandError e) {

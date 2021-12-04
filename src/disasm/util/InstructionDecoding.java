@@ -276,17 +276,32 @@ public final class InstructionDecoding {
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
         short imm12 = (short) ((instruction & (RS_2_MASK | FUNCT_7_MASK)) >>> RS_2_SHIFT);
         final String inst;
-        if (funct3 == 0x0) {
-            if (imm12 == 0x0) {
-                inst = "ecall";
-            } else if (imm12 == 0x1) {
-                inst = "ebreak";
-            } else {
-                throw new UnknownCommandError();
+        switch (funct3) {
+            case 0b000 -> {
+                if (imm12 == 0x0) {
+                    inst = "ecall";
+                } else if (imm12 == 0x1) {
+                    inst = "ebreak";
+                } else {
+                    throw new UnknownCommandError();
+                }
+                return inst;
             }
-            return inst;
+            case 0b001 -> inst = "csrrw";
+            case 0b010 -> inst = "csrrs";
+            case 0b011 -> inst = "csrrc";
+            case 0b100 -> inst = "csrrwi";
+            case 0b101 -> inst = "csrrsi";
+            case 0b111 -> inst = "csrrci";
+            default -> throw new AssertionError("Wrong funct3");
+        }
+        if (funct3 < 0b100) {
+            return String.format("%s %s, %s, %s",
+                    inst, getRegisterName(rd), getCSRName(imm12), getRegisterName(rs1));
         } else {
-            throw new UnsupportedOperationException("CSR commands representation are not supported yet");
+            // imm is in rs1
+            return String.format("%s %s, %s, %d",
+                    inst, getRegisterName(rd), getCSRName(imm12), rs1);
         }
     }
 
