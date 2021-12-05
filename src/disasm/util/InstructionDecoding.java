@@ -226,44 +226,36 @@ public final class InstructionDecoding {
         byte rs1 = (byte) ((instruction & RS_1_MASK) >>> RS_1_SHIFT);
         byte rs2 = (byte) ((instruction & RS_2_MASK) >>> RS_2_SHIFT);
         byte funct7 = (byte) ((instruction & FUNCT_7_MASK) >>> FUNCT_7_SHIFT);
-        final String inst;
-        switch (funct7) {
-            case 0x00:
-                inst = switch (funct3) {
-                    case 0x0 -> "add";
-                    case 0x4 -> "xor";
-                    case 0x6 -> "or";
-                    case 0x7 -> "and";
-                    case 0x1 -> "sll";
-                    case 0x5 -> "srl";
-                    case 0x2 -> "slt";
-                    case 0x3 -> "sltu";
-                    default -> throw new UnknownCommandError();
-                };
-                break;
-            case 0x20:
-                inst = switch (funct3) {
-                    case 0x0 -> "sub";
-                    case 0x5 -> "sra";
-                    default -> throw new UnknownCommandError();
-                };
-                break;
-            case 0x01:
-                inst = switch (funct3) {
-                    case 0x0 -> "mul";
-                    case 0x1 -> "mulh";
-                    case 0x2 -> "mulsu";
-                    case 0x3 -> "mulu";
-                    case 0x4 -> "div";
-                    case 0x5 -> "divu";
-                    case 0x6 -> "rem";
-                    case 0x7 -> "remu";
-                    default -> throw new UnknownCommandError();
-                };
-                break;
-            default:
-                throw new UnknownCommandError();
-        }
+        final String inst = switch (funct7) {
+            case 0x00 -> switch (funct3) {
+                case 0x0 -> "add";
+                case 0x4 -> "xor";
+                case 0x6 -> "or";
+                case 0x7 -> "and";
+                case 0x1 -> "sll";
+                case 0x5 -> "srl";
+                case 0x2 -> "slt";
+                case 0x3 -> "sltu";
+                default -> throw new UnknownCommandError();
+            };
+            case 0x20 -> switch (funct3) {
+                case 0x0 -> "sub";
+                case 0x5 -> "sra";
+                default -> throw new UnknownCommandError();
+            };
+            case 0x01 -> switch (funct3) {
+                case 0x0 -> "mul";
+                case 0x1 -> "mulh";
+                case 0x2 -> "mulsu";
+                case 0x3 -> "mulu";
+                case 0x4 -> "div";
+                case 0x5 -> "divu";
+                case 0x6 -> "rem";
+                case 0x7 -> "remu";
+                default -> throw new UnknownCommandError();
+            };
+            default -> throw new UnknownCommandError();
+        };
         final String dest = getRegisterName(rd);
         final String first = getRegisterName(rs1);
         final String second = getRegisterName(rs2);

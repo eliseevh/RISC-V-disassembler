@@ -24,17 +24,13 @@ public class DisassemblerToString {
     }
 
     public String disasm() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(textSectionDisasm());
-        builder.append("\n");
-        builder.append(symtabSectionDisasm());
-        return builder.toString();
+        return textSectionDisasm() +
+                "\n" +
+                symtabSectionDisasm();
     }
 
     private String symtabSectionDisasm() {
-        StringBuilder builder = new StringBuilder(".symtab\n");
-        builder.append(symtab);
-        return builder.toString();
+        return ".symtab\n" + symtab;
     }
 
     private String textSectionDisasm() {
@@ -57,7 +53,7 @@ public class DisassemblerToString {
 
         // add comment with jump destination label
         if (inst.getJumpOffset() != null) {
-            builder.append(" # " + labels.get(inst.getAddress() + inst.getJumpOffset()));
+            builder.append(" # ").append(labels.get(inst.getAddress() + inst.getJumpOffset()));
         }
 
         builder.append("\n");

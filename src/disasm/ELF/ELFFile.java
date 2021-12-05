@@ -3,9 +3,7 @@ package disasm.ELF;
 import static disasm.util.BytesOperations.*;
 
 public class ELFFile {
-    private final ELFHeader header;
     private final ELFSectionHeader[] sectionHeaders;
-    private final ELFSectionHeader stringTableSectionHeader;
     private final ELFSectionHeader stringTableHeader;
     private final String[] sectionNames;
 
@@ -16,12 +14,12 @@ public class ELFFile {
 
     public ELFFile(byte[] file) {
         this.file = file;
-        header = new ELFHeader(file);
+        ELFHeader header = new ELFHeader(file);
         int shoff = header.getSectionHeaderOffset();
         int shnum = header.getSectionHeaderEntriesNum();
         sectionHeaders = new ELFSectionHeader[shnum];
         sectionNames = new String[shnum];
-        stringTableSectionHeader = new ELFSectionHeader(file,
+        ELFSectionHeader stringTableSectionHeader = new ELFSectionHeader(file,
                 shoff + header.getSectionStringTableIndex() * SECTION_HEADER_ENTRY_SIZE);
         int sectionHeaderNamesOffset = stringTableSectionHeader.getOffset();
         for (int i = 0; i < shnum; i++) {
@@ -39,10 +37,6 @@ public class ELFFile {
             }
         }
         throw new AssertionError("There is no section with name \"" + name + "\"");
-    }
-
-    public ELFHeader getHeader() {
-        return header;
     }
 
     public byte[] getFile() {

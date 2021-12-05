@@ -5,13 +5,10 @@ import java.util.Map;
 import static disasm.util.BytesOperations.*;
 
 public class SymtabEntry {
-    private final int nameOffset;
     private final int value;
     private final int size;
-    private final byte info;
     private final byte type;
     private final byte bind;
-    private final byte other;
     private final byte visibility;
     private final short idx;
 
@@ -84,7 +81,7 @@ public class SymtabEntry {
         if (0xff20 <= idx && idx <= 0xff3f) {
             return "OS";
         }
-        if (0xff00 <= idx && idx <= 0xffff) {
+        if (0xff00 <= idx) {
             return "RESERVE";
         }
         return Integer.toString(idx);
@@ -104,13 +101,13 @@ public class SymtabEntry {
 
     public SymtabEntry(byte[] bytes, int offset, ELFFile file, int entryIdx) {
         this.entryIdx = entryIdx;
-        nameOffset = getIntLittleEndian(bytes, offset);
+        int nameOffset = getIntLittleEndian(bytes, offset);
         value = getIntLittleEndian(bytes, offset + 4);
         size = getIntLittleEndian(bytes, offset + 8);
-        info = bytes[offset + 0xc];
+        byte info = bytes[offset + 0xc];
         type = (byte) (info & 0xf);
         bind = (byte) (info >>> 4);
-        other = bytes[offset + 0xd];
+        byte other = bytes[offset + 0xd];
         visibility = (byte) (other & 0x3);
         idx = getShortLittleEndian(bytes, offset + 0xe);
         if (nameOffset == 0) {

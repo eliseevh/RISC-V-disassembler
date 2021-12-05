@@ -34,6 +34,8 @@ public class Disassembler {
             System.out.println("Input file not found: " + e.getMessage());
         } catch (IOException e) {
             System.out.println("Cannot read input file: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
