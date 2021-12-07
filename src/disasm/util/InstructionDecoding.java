@@ -440,8 +440,9 @@ public final class InstructionDecoding {
     }
 
     public static int getJFormatOffset(int instruction) {
-        int imm20 = instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK) >>> FUNCT_3_SHIFT;
-        int offset = ((imm20 & 0b01111111111000000000) >>> 8)
+        int imm20 = (instruction & (FUNCT_3_MASK | RS_1_MASK | RS_2_MASK | FUNCT_7_MASK)) >>> FUNCT_3_SHIFT;
+        int offset =
+                  ((imm20 & 0b01111111111000000000) >>> 8)
                 + ((imm20 & 0b00000000000100000000) << 3)
                 + ((imm20 & 0b00000000000011111111) << 12)
                 + ((imm20 & 0b10000000000000000000) << 1);
